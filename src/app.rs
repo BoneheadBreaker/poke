@@ -1,13 +1,12 @@
 use crate::event::{AppEvent, Event, EventHandler};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ratatui::{DefaultTerminal, widgets::ListState};
+use ratatui_textarea::TextArea;
 use std::{
     fs::{self},
     io,
     path::Path,
 };
-
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use edit::edit_file;
-use ratatui::{DefaultTerminal, widgets::ListState};
 
 /// Application.
 #[derive(Debug)]
@@ -23,7 +22,10 @@ pub struct App {
     pub folder_list: ListState,
     pub file_list: ListState,
     pub files: Vec<String>,
-    pub focus_element: String,
+    pub focus_element: String, // "Folder" or "File"
+    pub open_file: Option<String>, // The file that is actively opened (None, or a string)
+    pub textarea: TextArea<'static>,
+    pub editor_focused: bool,
 }
 
 impl Default for App {
@@ -37,6 +39,9 @@ impl Default for App {
             folder_list: ListState::default(),
             file_list: ListState::default(),
             focus_element: "Folder".to_string(),
+            open_file: None,
+            textarea: TextArea::default(),
+            editor_focused: true,
         }
     }
 }
@@ -97,6 +102,16 @@ impl App {
 
     /// Handles the key events and updates the state of [`App`].
     pub fn handle_key_event(&mut self, key_event: KeyEvent) -> color_eyre::Result {
+        if self.editor_focused {
+            if key_event.code == KeyCode::Esc {
+                self.editor_focused = false;
+                return Ok(());
+            }
+
+            self.textarea.input(key_event);
+            return Ok(());
+        }
+
         match key_event.code {
             KeyCode::Esc | KeyCode::Char('q') => self.events.send(AppEvent::Quit),
 
@@ -138,7 +153,12 @@ impl App {
                         .selected()
                         .and_then(|index| self.files.get(index))
                     {
-                        edit_file(name)?;
+                        let contents = fs::read_to_string(name)?;
+                        self.open_file = Some(name.clone());
+
+                        let lines = contents.lines().map(String::from).collect();
+                        self.textarea = TextArea::new(lines);
+                        self.editor_focused = true
                     }
                 }
             }
@@ -167,5 +187,4 @@ impl App {
     pub fn quit(&mut self) {
         self.running = false;
     }
-
 }

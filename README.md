@@ -1,11 +1,13 @@
 # poke
 
-This is a TUI file explorer built to learn [Rust]
+Poke is a TUI file explorer built to learn [Rust]
 
-Its made using [Ratatui]
+Its made using [Ratatui] and [Crossterm]
 
 [Rust]: https://rust-lang.org/
 [Ratatui]: https://ratatui.rs
+[Crossterm]: https://github.com/crossterm-rs/crossterm
+
 ## License
 
 Copyright (c) BoneheadBreaker <bhb@tutamail.com>

@@ -1,8 +1,8 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style, Stylize},
-    widgets::{Block, BorderType, List, ListDirection, Paragraph, StatefulWidget, Widget},
+    style::{Color, Style},
+    widgets::{Block, BorderType, List, ListDirection, StatefulWidget, Widget},
 };
 
 use crate::app::App;
@@ -55,25 +55,17 @@ impl Widget for &mut App {
             &mut self.file_list,
         );
 
-        let text = format!(
-            "This is a tui template.\n\
-                Press `Esc`, `Ctrl-C` or `q` to stop running.\n\
-                Press left and right to increment and decrement the counter respectively.\n\
-                Counter: {}",
-            self.counter
-        );
+        let editor_block = Block::bordered()
+            .title(self.open_file.as_deref().unwrap_or("Editor"))
+            .title_alignment(Alignment::Center)
+            .border_type(BorderType::Rounded);
 
-        let paragraph = Paragraph::new(text)
-            .block(
-                Block::bordered()
-                    .title("poke")
-                    .title_alignment(Alignment::Center)
-                    .border_type(BorderType::Rounded),
-            )
-            .fg(Color::Cyan)
-            .bg(Color::Black)
-            .centered();
+        let inner = editor_block.inner(chunks[1]);
+        editor_block.render(chunks[1], buf);
+        Widget::render(&self.textarea, inner, buf);
 
-        paragraph.render(chunks[1], buf);
+        let style = Style::default().bg(Color::DarkGray);
+        self.textarea.set_line_number_style(style);
+
     }
 }
